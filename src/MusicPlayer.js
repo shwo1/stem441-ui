@@ -14,7 +14,7 @@ export default function MusicPlayer() {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+    <Box sx={{ backgroundColor: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography variant="h5" sx={{ mb: 2 }}>Song Title</Typography>
         <LinearProgress variant="determinate" value={50} sx={{ width: '50rem', height: '0.5rem', mb: 4 }} />
