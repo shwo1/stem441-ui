@@ -26,7 +26,7 @@ export default function UploadPage() {
       })
       .catch((error) => {
         console.error('Error uploading file:', error);
-        history.push(`/musicPlayer/null`);
+        history.push(`/musicPlayer/1`);
       });
   };
 
