@@ -41,6 +41,7 @@ export default function MusicPlayer({ id }) {
       audio.play();
     }
     setPlaying(!playing);
+    setAudioCurrentTime(audio.currentTime);
   };
 
   const handleStop = () => {
@@ -77,6 +78,11 @@ export default function MusicPlayer({ id }) {
     setAudioCurrentTime(newCurrentTime);
   };
 
+  const handleLoadedMetadata = () => {
+    const audio = document.getElementById('audio');
+    audio.volume = volume; // set the volume to the current value of the volume state
+  };
+
   return (
     <Box sx={{ backgroundColor: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
       <Box sx={{ position: 'absolute', top: '1rem', left: '1rem', '&:hover img': { transform: 'scale(1.1)' } }}>
@@ -87,8 +93,8 @@ export default function MusicPlayer({ id }) {
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography variant="h5" sx={{ mb: 2 }}>Song Title</Typography>
         <LinearProgress variant="determinate" value={audioCurrentTime / audioDuration * 100} sx={{
-          width: '50rem', height: '0.5rem', mb: 4, "&:hover": { cursor: 'pointer' } }} onClick={handleLinearProgressClick} />
-        <audio id="audio" src={audioSrc} onTimeUpdate={handleTimeUpdate} onDurationChange={handleDurationChange} />
+          width: '30rem', height: '0.5rem', mb: 4, "&:hover": { cursor: 'pointer' } }} onClick={handleLinearProgressClick} />
+        <audio id="audio" src={audioSrc} onTimeUpdate={handleTimeUpdate} onDurationChange={handleDurationChange} onLoadedMetadata={handleLoadedMetadata} />
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           <IconButton size="large" onClick={handlePlayPause} sx={{ fontSize: '6rem', mx: 2 }}>
             {playing ? <Pause /> : <PlayArrow />}
