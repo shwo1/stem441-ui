@@ -5,6 +5,12 @@ import { Link } from 'react-router-dom';
 import JSZip from 'jszip';
 import logo from './stem441-high-resolution-logo-black-on-transparent-background.png'
 
+function formatTime(time) {
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 export default function MusicPlayer({ id }) {
   const [playing, setPlaying] = React.useState(false);
   const [audioSrc, setAudioSrc] = React.useState(null);
@@ -83,6 +89,7 @@ export default function MusicPlayer({ id }) {
     audio.volume = volume; // set the volume to the current value of the volume state
   };
 
+
   return (
     <Box sx={{ backgroundColor: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
       <Box sx={{ position: 'absolute', top: '1rem', left: '1rem', '&:hover img': { transform: 'scale(1.1)' } }}>
@@ -92,8 +99,17 @@ export default function MusicPlayer({ id }) {
       </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography variant="h5" sx={{ mb: 2 }}>Song Title</Typography>
-        <LinearProgress variant="determinate" value={audioCurrentTime / audioDuration * 100} sx={{
-          width: '30rem', height: '0.5rem', mb: 4, "&:hover": { cursor: 'pointer' } }} onClick={handleLinearProgressClick} />
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '30rem' }}>
+  <Typography variant="caption">
+    {formatTime(audioCurrentTime)}
+  </Typography>
+  <LinearProgress variant="determinate" value={audioCurrentTime / audioDuration * 100} sx={{
+    width: '100%', height: '0.5rem', mx: '1rem', "&:hover": { cursor: 'pointer' }
+  }} onClick={handleLinearProgressClick} />
+  <Typography variant="caption">
+    {formatTime(audioDuration)}
+  </Typography>
+</Box>
         <audio id="audio" src={audioSrc} onTimeUpdate={handleTimeUpdate} onDurationChange={handleDurationChange} onLoadedMetadata={handleLoadedMetadata} />
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           <IconButton size="large" onClick={handlePlayPause} sx={{ fontSize: '6rem', mx: 2 }}>
