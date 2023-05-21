@@ -5,29 +5,35 @@ import './UploadPage.css';
 import logo from './stem441-high-resolution-logo-color-on-transparent-background.png';
 
 export default function UploadPage() {
-  const [selectedFile, setSelectedFile] = React.useState(null);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const history = useHistory();
 
-  const handleFileUpload = (event) => {
-    setSelectedFile(event.target.files[0]);
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]; // Accessing files property with null check
+
+    if (file) {
+      setSelectedFile(file);
+      // Additional handling or processing of the selected file
+    }
   };
 
   const handleSubmit = () => {
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    fetch('/uploadFile', {
-      method: 'POST',
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        const { id } = data;
-        history.push(`/musicPlayer/${id}`);
-      })
-      .catch((error) => {
-        console.error('Error uploading file:', error);
-        history.push(`/musicPlayer/1`);
-      });
+    history.push(`/musicPlayer/a669bbcf-0eb4-4e1a-908b-9df6aa363f7b`);
+    // const formData = new FormData();
+    // formData.append('file', selectedFile);
+    // fetch('/uploadFile', {
+    //   method: 'POST',
+    //   body: formData,
+    // })
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     const { id } = data;
+    //     history.push(`/musicPlayer/${id}`);
+    //   })
+    //   .catch((error) => {
+    //     console.error('Error uploading file:', error);
+    //     history.push(`/musicPlayer/1`);
+    //   });
   };
 
   const handleCancel = () => {

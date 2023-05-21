@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-function precomputeWaveformData(audioBuffer) {
+function precomputeWaveformData(audioBuffer: { getChannelData: (arg0: number) => any; }) {
     const data = audioBuffer.getChannelData(0);
     const dataLength = data.length;
 
-    const waveformData = [];
+    const waveformData: { min: number; max: number; }[] = [];
 
     let index = 0;
     while (index < dataLength) {
@@ -26,7 +26,7 @@ function precomputeWaveformData(audioBuffer) {
     return waveformData;
 }
 
-function drawWaveform(context, canvas, waveformData, startTime, endTime, audioBufferDuration, isMuted) {
+function drawWaveform(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, waveformData: string | any[], startTime: number, endTime: number, audioBufferDuration: number, isMuted: boolean) {
     // const context = canvas.getContext("2d");
     const width = canvas.width;
     const height = canvas.height;
@@ -50,14 +50,20 @@ function drawWaveform(context, canvas, waveformData, startTime, endTime, audioBu
     }
 }
 
-function Waveform({ audioBuffer, onClick, progress, visibleDuration, isMuted }) {
-    const canvasRef = useRef(null);
+function Waveform({ audioBuffer, onClick, progress, visibleDuration, isMuted }: {
+    audioBuffer: AudioBuffer,
+    onClick: () => void,
+    progress: number,
+    visibleDuration: number,
+    isMuted: boolean
+  }) {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const width = 500;
     const height = 100;
 
-    const [waveformData, setWaveformData] = useState(null);
-    const [canvasContext, setCanvasContext] = useState(null);
-
+    const [waveformData, setWaveformData] = useState<{ min: number; max: number; }[] | null>(null);
+    const [canvasContext, setCanvasContext] = useState<CanvasRenderingContext2D | null>(null);
+  
     useEffect(() => {
         if (canvasRef.current && audioBuffer) {
             const precomputedData = precomputeWaveformData(audioBuffer);
@@ -72,7 +78,7 @@ function Waveform({ audioBuffer, onClick, progress, visibleDuration, isMuted }) 
             const endTime = Math.min(audioBuffer.duration, startTime + visibleDuration);
             drawWaveform(canvasContext, canvasRef.current, waveformData, startTime, endTime, audioBuffer.duration, isMuted);
         }
-    }, [canvasContext, canvasRef, waveformData, audioBuffer, progress, visibleDuration]);
+    }, [canvasContext, canvasRef, waveformData, audioBuffer, progress, visibleDuration, isMuted]);
 
     return (
         <div className="waveform" onClick={onClick}>

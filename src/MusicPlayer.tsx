@@ -6,22 +6,27 @@ import JSZip from 'jszip';
 import logo from './stem441-high-resolution-logo-black-on-transparent-background.png';
 import Waveform from './Waveform';
 
-function formatTime(time) {
+function formatTime(time: number): string {
   const minutes = Math.floor(time / 60);
   const seconds = Math.floor(time % 60);
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-export default function MusicPlayer({ id }) {
+export default function MusicPlayer({ id }: { id: string }) {
   const [playing, setPlaying] = React.useState(false);
-  const [audioSrcs, setAudioSrcs] = React.useState([]);
+  const [audioSrcs, setAudioSrcs] = React.useState<string[]>([]);
   const [audioDuration, setAudioDuration] = React.useState(0);
   const [audioCurrentTime, setAudioCurrentTime] = React.useState(0);
   const [volume, setVolume] = React.useState(0.5);
   const [mutedTracks, setMutedTracks] = React.useState([false, false, false, false]);
-  const audioRefs = React.useRef([React.createRef(), React.createRef(), React.createRef(), React.createRef()]);
-  const [audioBuffers, setAudioBuffers] = React.useState([]);
-  const [audioContext, setAudioContext] = React.useState(null);
+  const audioRefs = React.useRef([
+    React.createRef<HTMLAudioElement>(),
+    React.createRef<HTMLAudioElement>(),
+    React.createRef<HTMLAudioElement>(),
+    React.createRef<HTMLAudioElement>()
+  ]);
+  const [audioBuffers, setAudioBuffers] = React.useState<AudioBuffer[]>([]);
+  const [audioContext, setAudioContext] = React.useState<AudioContext | null>(null);
 
   React.useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL}/getAudioZip?id=${id}`)
@@ -32,13 +37,15 @@ export default function MusicPlayer({ id }) {
       })
       .then((zip) => {
         const trackPromises = ['drums.wav', 'bass.wav', 'other.wav', 'vocals.wav'].map((track) => {
-          return zip.file(track).async('blob');
+          return zip.file(track)?.async('blob');
         });
         return Promise.all(trackPromises);
       })
       .then((audioBlobs) => {
         // Create audio URLs from blobs
-        const audioURLs = audioBlobs.map((audioBlob) => URL.createObjectURL(audioBlob));
+        const audioURLs: string[] = audioBlobs
+          .filter((audioBlob) => audioBlob !== undefined) // Filter out undefined values
+          .map((audioBlob) => audioBlob ? URL.createObjectURL(audioBlob) : ''); // Provide fallback value for undefined blobs
         setAudioSrcs(audioURLs);
         console.log(audioURLs);
       })
@@ -49,7 +56,7 @@ export default function MusicPlayer({ id }) {
 
   const handlePlayPause = () => {
     if (audioContext === null) {
-      const newAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const newAudioContext = new window.AudioContext();
       setAudioContext(newAudioContext);
 
       const bufferPromises = audioSrcs.map((audioSrc) =>
@@ -63,9 +70,9 @@ export default function MusicPlayer({ id }) {
           Promise.resolve(setAudioBuffers(buffers)).then(() => {
             audioRefs.current.forEach((audioRef) => {
               if (playing) {
-                audioRef.current.pause();
+                audioRef.current?.pause();
               } else {
-                audioRef.current.play();
+                audioRef.current?.play();
               }
             });
           });
@@ -77,9 +84,9 @@ export default function MusicPlayer({ id }) {
     } else {
       audioRefs.current.forEach((audioRef) => {
         if (playing) {
-          audioRef.current.pause();
+          audioRef.current?.pause();
         } else {
-          audioRef.current.play();
+          audioRef.current?.play();
         }
       });
     }
@@ -88,25 +95,29 @@ export default function MusicPlayer({ id }) {
 
   const handleStop = () => {
     audioRefs.current.forEach((audioRef) => {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      if (audioRef.current !== null) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
     });
     setPlaying(false);
   };
 
   const handleTimeUpdate = () => {
-    const currentTime = audioRefs.current[0].current.currentTime;
+    const currentTime = audioRefs.current[0].current?.currentTime ?? 0;
     setAudioCurrentTime(currentTime);
   };
 
-  const handleVolumeChange = (event, newValue) => {
+  const handleVolumeChange = (event: Event, value: number | number[], activeThumb: number) => {
     audioRefs.current.forEach((audioRef) => {
-      audioRef.current.volume = newValue;
+      if (audioRef.current !== null) {
+        audioRef.current.volume = Array.isArray(value) ? value[activeThumb] : value;
+      }
     });
-    setVolume(newValue);
+    setVolume(Array.isArray(value) ? value[activeThumb] : value);
   };
 
-  const handleLinearProgressClick = (event) => {
+  const handleLinearProgressClick = (event: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
     const boundingClientRect = event.currentTarget.getBoundingClientRect();
     const progressWidth = boundingClientRect.width;
     const clickX = event.clientX - boundingClientRect.left;
@@ -114,7 +125,9 @@ export default function MusicPlayer({ id }) {
     const newCurrentTime = progressFraction * audioDuration;
 
     audioRefs.current.forEach((audioRef) => {
-      audioRef.current.currentTime = newCurrentTime;
+      if (audioRef.current !== null) {
+        audioRef.current.currentTime = newCurrentTime;
+      }
     });
 
     setAudioCurrentTime(newCurrentTime);
@@ -122,16 +135,18 @@ export default function MusicPlayer({ id }) {
 
   const handleLoadedMetadata = () => {
     audioRefs.current.forEach((audioRef) => {
-      audioRef.current.volume = volume; // set the volume to the current value of the volume state
+      if (audioRef.current !== null) {
+        audioRef.current.volume = volume;
+      }
     });
 
     const audio = audioRefs.current[0].current;
-    if (!isNaN(audio.duration)) {
+    if (audio !== null && !isNaN(audio.duration)) {
       setAudioDuration(audio.duration);
     }
   };
 
-  const handleTrackToggle = (index) => {
+  const handleTrackToggle = (index: number) => {
     setMutedTracks((prevMutedTracks) => {
       const newMutedTracks = [...prevMutedTracks];
       newMutedTracks[index] = !newMutedTracks[index];
@@ -139,7 +154,9 @@ export default function MusicPlayer({ id }) {
     });
 
     const audio = audioRefs.current[index].current;
-    audio.muted = !audio.muted;
+    if (audio !== null) {
+      audio.muted = !audio.muted;
+    }
   };
 
   return (
@@ -167,7 +184,7 @@ export default function MusicPlayer({ id }) {
             key={index}
             ref={audioRefs.current[index]}
             src={src}
-            onTimeUpdate={index === 0 ? handleTimeUpdate : null}
+            onTimeUpdate={index === 0 ? handleTimeUpdate : () => {}}
             onLoadedMetadata={handleLoadedMetadata}
           />
         ))}
